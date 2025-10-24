@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NeuroWave — Iniciar sesión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" >
+  <link href="script.js" rel="stylesheet" >
+  <link href="styles.css" rel="stylesheet" >
+    <style>
+    :root{
+      --bg-1:#0a021a;      /* fondo profundo */
+      --bg-2:#1a0440;      /* degradado medio */
+      --violet:#7c3aed;    /* botón/acentos */
+      --violet-2:#a78bfa;  /* texto acento */
+      --glow: 0 0 40px rgba(124,58,237,.45), 0 0 80px rgba(168,85,247,.25);
+      --card: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:#e9e7ff;
+      background: radial-gradient(1200px 700px at 70% -10%, #3b1a66 0%, transparent 60%),
+                  radial-gradient(1000px 600px at -10% 100%, #2a0e5a 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg-2), var(--bg-1));
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{position:relative;min-height:100%;}
+    /* Canvas de red neuronal */
+    #net{
+      position:fixed; inset:0; z-index:-1; filter: contrast(120%) brightness(110%);
+    }
+
+    /* Barra */
+    .nav{max-width:1200px;margin:auto;padding:22px 20px;display:flex;align-items:center;gap:18px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.6px}
+    .brand-icon{width:28px;height:28px;border-radius:8px;background:conic-gradient(from 180deg, #8b5cf6, #22d3ee, #8b5cf6); box-shadow: inset 0 0 20px rgba(255,255,255,.35), var(--glow)}
+    .brand span{font-family:"Space Grotesk", Inter, sans-serif; font-size:20px}
+    .nav-space{flex:1}
+    .nav a{opacity:.85}
+    .nav a:hover{opacity:1}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;background:linear-gradient(180deg,#8b5cf6,#6d28d9); border:1px solid rgba(255,255,255,.18); box-shadow: var(--glow); font-weight:700}
+
+    /* Hero */
+    .hero{max-width:1200px;margin:8vh auto 0;padding:0 20px;display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border:1px solid var(--stroke);
+      border-radius:28px;
+      padding:36px 34px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    }
+    h1{margin:0 0 14px;font-size:clamp(34px,4.6vw,64px);line-height:1.02;font-family:"Space Grotesk", Inter, sans-serif;}
+    .lead{margin:0 0 26px;max-width:46ch;color:#d6d2ff;font-weight:300;font-size:clamp(15px,1.4vw,18px)}
+    .cta{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    .btn-ghost{padding:10px 16px;border-radius:14px;border:1px solid var(--stroke);background:var(--card)}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;border:1px solid var(--stroke);background:rgba(124,58,237,.12); color:var(--violet-2); font-weight:600; margin-bottom:10px}
+
+    /* Showcase panel */
+    .panel{
+      min-height:340px; border-radius:28px; position:relative; overflow:hidden; border:1px solid var(--stroke);
+      background: radial-gradient(500px 280px at 30% 40%, rgba(124,58,237,.25), transparent 60%),
+                  radial-gradient(380px 240px at 80% 70%, rgba(168,85,247,.18), transparent 60%),
+                  rgba(255,255,255,.03);
+    }
+    .panel::after{content:"";position:absolute;inset:0;box-shadow: inset 0 0 120px rgba(124,58,237,.18)}
+    .panel .badge{position:absolute;top:16px;right:16px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.08);backdrop-filter: blur(10px); font-weight:700}
+
+    /* Footer note */
+    .foot{max-width:1200px;margin:40px auto 60px;padding:0 20px;opacity:.7; font-size:14px}
+
+    /* Responsive */
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr}
+    }
+    .hero {
+  margin: 8vh auto 0;
+}
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+  </style>
+</head>
+<body>
+  <canvas id="net" aria-hidden="true"></canvas>
+  <canvas id="net"></canvas>
+  <div class="container">
+    <div class="card" id="form" >
+      <div class="brand"><div class="brand-badge"></div><span>Anders</span></div>
+      <span class="pill" aria-hidden="true">Anders · Acceso</span>
+      <h1>Iniciar sesión</h1>
+      <p class="sub">Bienvenido de vuelta. Conecta con tu red.</p>
+
+      <div class="group">
+        <label for="email">Correo</label>
+        <div class="field">
+          <input id="email" name="email" type="email" placeholder="tú@ejemplo.com" required />
+        </div>
+      </div>
+
+      <div class="group">
+        <label for="pwd">Contraseña</label>
+        <div class="field">
+          <input id="pwd" name="password" type="password" placeholder="••••••••" minlength="6" required />
+          <button class="icon-btn" type="button" id="toggle" aria-label="Mostrar u ocultar contraseña">👁️</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="remember" /> <span>Recordarme</span>
+        </label>
+        <a href="#recuperar">¿Olvidaste tu contraseña?</a>
+      </div>
+      
+      <button class="btn" onclick="verificarespacios()" >Entrar</button>
+      <p id="error" class="err" role="alert">Revisa el correo y la contraseña.</p>
+
+      <p class="foot">¿No tienes cuenta? <a href="crear.html">Crear una cuenta</a></p>
+    </div>
+  </div>
+<script>
+    // --- Fondo interactivo tipo red neuronal ---
+    const c = document.getElementById('net');
+    const ctx = c.getContext('2d');
+    let W, H, DPR;
+
+    const state = {
+      nodes: [],
+      mouse: {x: null, y: null, active: false}
+    };
+
+    function resize(){
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = c.width = Math.floor(innerWidth * DPR);
+      H = c.height = Math.floor(innerHeight * DPR);
+      c.style.width = innerWidth + 'px';
+      c.style.height = innerHeight + 'px';
+      spawn();
+    }
+    window.addEventListener('resize', resize);
+
+    function rand(a,b){return a + Math.random()*(b-a)}
+
+    function spawn(){
+      const density = Math.min(120, Math.floor((innerWidth * innerHeight) / 14000));
+      state.nodes = [...Array(density)].map(()=>({
+        x: rand(0,W), y: rand(0,H),
+        vx: rand(-0.25,0.25), vy: rand(-0.25,0.25),
+        r: rand(1.2,2.8) * DPR,
+        pulse: rand(0, 2*Math.PI)
+      }));
+    }
+
+    // Interacción
+    c.addEventListener('mousemove', e=>{
+      const rect = c.getBoundingClientRect();
+      state.mouse.x = (e.clientX - rect.left) * DPR;
+      state.mouse.y = (e.clientY - rect.top) * DPR;
+      state.mouse.active = true;
+    });
+    c.addEventListener('mouseleave', ()=> state.mouse.active = false);
+    c.addEventListener('touchstart', e=>{
+      state.mouse.active = true;
+      const t = e.touches[0];
+      const rect = c.getBoundingClientRect();
+      state.mouse.x = (t.clientX - rect.left) * DPR;
+      state.mouse.y = (t.clientY - rect.top) * DPR;
+    }, {passive:true});
+    c.addEventListener('touchmove', e=>{
+      const t = e.touches[0];
+      const rect = c.getBoundingClientRect();
+      state.mouse.x = (t.clientX - rect.left) * DPR;
+      state.mouse.y = (t.clientY - rect.top) * DPR;
+    }, {passive:true});
+    c.addEventListener('touchend', ()=> state.mouse.active = false);
+
+    function draw(){
+      // fondo suave
+      ctx.clearRect(0,0,W,H);
+
+      // líneas
+      for(let i=0;i<state.nodes.length;i++){
+        const a = state.nodes[i];
+        a.x += a.vx; a.y += a.vy;
+        if(a.x<0||a.x>W) a.vx*=-1; if(a.y<0||a.y>H) a.vy*=-1;
+
+        // atracción/repulsión suave al mouse
+        if(state.mouse.active){
+          const dx = a.x - state.mouse.x, dy = a.y - state.mouse.y;
+          const d2 = dx*dx + dy*dy;
+          const rInfluence = 200 * DPR;
+          if(d2 < rInfluence*rInfluence){
+            const f = -0.6 / Math.max(8, Math.sqrt(d2));
+            a.vx += f*dx; a.vy += f*dy;
+          }
+        }
+
+        for(let j=i+1;j<state.nodes.length;j++){
+          const b = state.nodes[j];
+          const dx = a.x-b.x, dy=a.y-b.y;
+          const dist = Math.hypot(dx,dy);
+          const max = 140 * DPR;
+          if(dist < max){
+            const alpha = (1 - dist/max) * .35;
+            ctx.beginPath();
+            ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+            ctx.strokeStyle = `rgba(167, 85, 247, ${alpha})`;
+            ctx.lineWidth = 1 * DPR;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // nodos con brillo pulsatil
+      for(const n of state.nodes){
+        n.pulse += 0.02;
+        const radius = n.r + Math.sin(n.pulse)*0.6*DPR;
+        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, radius*6);
+        g.addColorStop(0, 'rgba(124,58,237,0.95)');
+        g.addColorStop(0.25, 'rgba(168,85,247,0.65)');
+        g.addColorStop(1, 'rgba(20,0,36,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, radius*6, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    resize();
+    draw();
+    fetch('/api/login', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: JSON.stringify({
+    email: 'usuario@correo.com',
+    password: '123456'
+  })
+}).then(res => res.json())
+  .then(data => console.log(data));
+  </script>
+     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ <script>
+    /*import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+  function firebase(){
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB34qVFSxzO50tHr5apWrgm8Hu5d3sSfds",
+    authDomain: "expo-ff369.firebaseapp.com",
+    projectId: "expo-ff369",
+    storageBucket: "expo-ff369.firebasestorage.app",
+    messagingSenderId: "511903114390",
+    appId: "1:511903114390:web:45d4923df5e7cb3b198eb7",
+    measurementId: "G-PYMH9CEWJH"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  function crearUsuario(){
+  const email = getelementbyId("email").value;
+  const password = getelementbyId("password").value;
+  const password1 = getelementbyId("password1").value;
+  const age = getelementbyId("age").value;
+  const materia = getelementbyId("materia").value;
+
+    const nuevo= database.ref("usuarios/"+email);
+    nuevo.set({
+      age : age,
+      gmail : gmail,
+      password: password1
+    })
+
+  }*/
+
+    function verificarespacios() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("pwd").value;
+  var iniciar = true; 
+  if(email=="" || password=="" ){
+    iniciar=false;
+    Swal.fire({
+      icon: "error",
+      title: "ops...",
+      text: "Hay campos vacios"
+    })
+   }
+//if ((email == "liangso420@gmail.com") && (password == "LianSOL12/") && (iniciar)) {
+   if ((email == "abc") && (password == "123") && (iniciar)) {
+  
+     Swal.fire({
+      icon: "success",
+      title: "Bienvenido",
+      text: "Se ha iniciado secion"
+     }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = 'paginaprincipal.html';
+        }
+      });
+   }
+   else {
+    Swal.fire({
+      icon: "error",
+      title: "ops...",
+      text: "La contraseña es incorrecta"
+    })
+     }
+ };
+
+ 
+  //  if(iniciar){
+  //      Swal.fire({
+  //     icon: "success",
+  //     title: "Bienvenido",
+  //     text: "Se ha iniciado secion"
+  //    }).then((result) => {
+  //       if (result.isConfirmed) {
+  //         window.location.href = 'paginaprincipal.html';
+  //       }
+  //     });
+  //  }
+</script>
+</body>
+</html>

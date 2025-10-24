@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cronómetro Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #0a021a;
+      --bg-2: #1a0440;
+      --violet: #7c3aed;
+      --violet-2: #a78bfa;
+      --glow: 0 0 40px rgba(124,58,237,.45), 0 0 80px rgba(168,85,247,.25);
+      --stroke: rgba(255,255,255,.08);
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(1200px 700px at 70% -10%, #3b1a66 0%, transparent 60%),
+                  radial-gradient(1000px 600px at -10% 100%, #2a0e5a 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg-2), var(--bg-1));
+      color: #e9e7ff;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+    #net {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      filter: contrast(120%) brightness(110%);
+    }
+    
+    /* Botón regresar en la esquina superior izquierda */
+    #regresar {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      font-size: 14px;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--glow);
+      color: white;
+      font-weight: 700;
+      border-radius: 14px;
+      text-decoration: none;
+      transition: transform 0.2s ease;
+    }
+    #regresar:hover {
+      transform: translateY(-2px);
+    }
+    
+    .timer-container {
+      max-width: 600px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+    
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(32px, 5vw, 48px);
+      text-shadow: 0 0 20px rgba(168,85,247,.5);
+      margin: 0;
+    }
+    
+    .timer-display {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--stroke);
+      border-radius: 28px;
+      padding: 40px 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+    
+    #display {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(48px, 8vw, 96px);
+      font-weight: 700;
+      color: var(--violet-2);
+      text-shadow: 0 0 30px rgba(168,85,247,.6);
+      letter-spacing: 0.1em;
+      margin: 0;
+    }
+    
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--glow);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 50px rgba(124,58,237,.55), 0 0 90px rgba(168,85,247,.35);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    .btn.start {
+      background: linear-gradient(180deg, #10b981, #059669);
+    }
+    
+    .btn.pause {
+      background: linear-gradient(180deg, #f59e0b, #d97706);
+    }
+    
+    .btn.reset {
+      background: linear-gradient(180deg, #ef4444, #dc2626);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Estado activo del cronómetro */
+    .timer-display.active {
+      border-color: var(--violet-2);
+      box-shadow: 0 10px 40px rgba(0,0,0,.35), var(--glow);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { 
+        box-shadow: 0 10px 40px rgba(0,0,0,.35), var(--glow); 
+      }
+      50% { 
+        box-shadow: 0 10px 40px rgba(0,0,0,.35), 0 0 60px rgba(124,58,237,.6), 0 0 100px rgba(168,85,247,.4); 
+      }
+    }
+    
+    /* Responsive */
+    @media (max-width: 600px) {
+      .controls {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .timer-display {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="net" aria-hidden="true"></canvas>
+  
+  <!-- Botón regresar -->
+  <a id="regresar" href="paginaprincipal.html">← Regresar</a>
+  
+  <div class="timer-container">
+    <h1>Cronómetro Digital</h1>
+    
+    <div id="timer-display-container" class="timer-display">
+      <div id="display">00:00:00</div>
+      
+      <div class="controls">
+        <button id="startBtn" class="btn start">▶ Iniciar</button>
+        <button id="pauseBtn" class="btn pause">⏸ Pausar</button>
+        <button id="resetBtn" class="btn reset">⏹ Reiniciar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fondo animado estilo neural net (igual que en fracciones)
+    const c = document.getElementById('net'), ctx = c.getContext('2d');
+    let W, H, DPR;
+    const bgState = { nodes: [] };
+
+    function resizeCanvas() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = c.width = innerWidth * DPR;
+      H = c.height = innerHeight * DPR;
+      c.style.width = innerWidth + 'px';
+      c.style.height = innerHeight + 'px';
+      spawnNodes();
+    }
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    function spawnNodes() {
+      const density = Math.min(120, Math.floor((innerWidth * innerHeight) / 14000));
+      bgState.nodes = Array.from({ length: density }, () => ({
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.25, 0.25), vy: rand(-0.25, 0.25),
+        r: rand(1.2, 2.8) * DPR,
+        pulse: rand(0, 2 * Math.PI)
+      }));
+    }
+
+    function drawBackground() {
+      ctx.clearRect(0, 0, W, H);
+      bgState.nodes.forEach((a, i) => {
+        a.x += a.vx; a.y += a.vy;
+        if (a.x < 0 || a.x > W) a.vx *= -1;
+        if (a.y < 0 || a.y > H) a.vy *= -1;
+
+        for (let j = i + 1; j < bgState.nodes.length; j++) {
+          const b = bgState.nodes[j];
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
+          const max = 140 * DPR;
+          if (dist < max) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(167,85,247,${(1 - dist/max)*.35})`;
+            ctx.lineWidth = 1 * DPR;
+            ctx.stroke();
+          }
+        }
+
+        const radius = a.r + Math.sin(a.pulse) * 0.6 * DPR;
+        const g = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, radius * 6);
+        g.addColorStop(0, 'rgba(124,58,237,0.95)');
+        g.addColorStop(0.25, 'rgba(168,85,247,0.65)');
+        g.addColorStop(1, 'rgba(20,0,36,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, radius * 6, 0, Math.PI * 2);
+        ctx.fill();
+        a.pulse += 0.02;
+      });
+      requestAnimationFrame(drawBackground);
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    drawBackground();
+
+    // Lógica del cronómetro
+    let startTime = 0;
+    let elapsedTime = 0;
+    let timerInterval;
+    let running = false;
+
+    const display = document.getElementById("display");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const timerDisplayContainer = document.getElementById("timer-display-container");
+
+    function updateTime() {
+      const currentTime = Date.now();
+      elapsedTime = currentTime - startTime;
+
+      const hours = Math.floor(elapsedTime / (1000 * 60 * 60));
+      const minutes = Math.floor((elapsedTime % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((elapsedTime % (1000 * 60)) / 1000);
+
+      display.textContent = 
+        `${hours.toString().padStart(2, '0')}:` +
+        `${minutes.toString().padStart(2, '0')}:` +
+        `${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function updateButtons() {
+      if (running) {
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        timerDisplayContainer.classList.add('active');
+      } else {
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        timerDisplayContainer.classList.remove('active');
+      }
+    }
+
+    startBtn.addEventListener("click", () => {
+      if (!running) {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateTime, 100); // Más fluido
+        running = true;
+        updateButtons();
+      }
+    });
+
+    pauseBtn.addEventListener("click", () => {
+      if (running) {
+        clearInterval(timerInterval);
+        running = false;
+        updateButtons();
+      }
+    });
+
+    resetBtn.addEventListener("click", () => {
+      clearInterval(timerInterval);
+      running = false;
+      elapsedTime = 0;
+      display.textContent = "00:00:00";
+      updateButtons();
+    });
+
+    // Inicializar estado de botones
+    updateButtons();
+  </script>
+</body>
+</html>

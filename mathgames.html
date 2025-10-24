@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Laboratorio de Fracciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #0a021a;
+      --bg-2: #1a0440;
+      --violet: #7c3aed;
+      --violet-2: #a78bfa;
+      --glow: 0 0 40px rgba(124,58,237,.45), 0 0 80px rgba(168,85,247,.25);
+      --stroke: rgba(255,255,255,.08);
+      --color-1-2: #22d3ee;
+      --color-1-3: #f471b5;
+      --color-1-4: #34d399;
+      --color-1-6: #fbbf24;
+      --color-1-8: #f87171;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(1200px 700px at 70% -10%, #3b1a66 0%, transparent 60%),
+                  radial-gradient(1000px 600px at -10% 100%, #2a0e5a 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg-2), var(--bg-1));
+      color: #e9e7ff;
+      font-family: 'Inter', sans-serif;
+      padding: 20px;
+    }
+    #net {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      filter: contrast(120%) brightness(110%);
+    }
+    
+    /* Botón regresar en la esquina superior izquierda */
+    #regresar {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      font-size: 14px;
+      padding: 10px 16px;
+    }
+    
+    .game-container {
+      max-width: 900px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(32px, 5vw, 48px);
+      text-shadow: 0 0 20px rgba(168,85,247,.5);
+      margin: 0;
+    }
+    .workbench {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--stroke);
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 25px;
+    }
+    .fraction-target {
+      width: 250px;
+      height: 250px;
+      border: 3px dashed rgba(255,255,255,0.2);
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .fraction-target.completed {
+      border-color: var(--violet-2);
+      box-shadow: var(--glow);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: var(--glow); }
+      50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(168,85,247,.45), 0 0 100px rgba(168,85,247,.35); }
+    }
+    .fraction-target.drag-over {
+      border-color: var(--violet-2);
+      transform: scale(1.05);
+    }
+    .placed-piece {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+    .fraction-display {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      background: rgba(0,0,0,0.2);
+      color: var(--violet-2);
+      padding: 5px 20px;
+      border-radius: 12px;
+      min-height: 56px;
+    }
+    .parts-bin {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      padding: 20px;
+    }
+    .fraction-piece-wrapper {
+      width: 80px;
+      height: 80px;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+      filter: drop-shadow(0 4px 15px rgba(0,0,0,.5));
+    }
+    .fraction-piece-wrapper:hover {
+      transform: scale(1.1);
+    }
+    .fraction-piece-wrapper:active {
+      cursor: grabbing;
+      transform: scale(1.05);
+    }
+    .fraction-piece {
+      width: 80px;
+      height: 80px;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--glow);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      text-decoration: none;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="net" aria-hidden="true"></canvas>
+  
+  <!-- Botón regresar movido a la esquina superior izquierda -->
+  <a id="regresar" class="btn" href="paginaprincipal.html">← Regresar</a>
+  
+  <div class="game-container">
+    <h1>Laboratorio de Fracciones</h1>
+    <div class="workbench">
+      <div id="fraction-target" class="fraction-target">
+        <div id="fraction-display" class="fraction-display">0</div>
+      </div>
+      <div class="controls">
+        <button id="reset-btn" class="btn">Limpiar</button>
+      </div>
+    </div>
+    <div id="parts-bin" class="parts-bin"></div>
+  </div>
+  <script>
+    // Fondo animado estilo neural net
+    const c = document.getElementById('net'), ctx = c.getContext('2d');
+    let W, H, DPR;
+    const bgState = { nodes: [] };
+
+    function resizeCanvas() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = c.width = innerWidth * DPR;
+      H = c.height = innerHeight * DPR;
+      c.style.width = innerWidth + 'px';
+      c.style.height = innerHeight + 'px';
+      spawnNodes();
+    }
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    function spawnNodes() {
+      const density = Math.min(120, Math.floor((innerWidth * innerHeight) / 14000));
+      bgState.nodes = Array.from({ length: density }, () => ({
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.25, 0.25), vy: rand(-0.25, 0.25),
+        r: rand(1.2, 2.8) * DPR,
+        pulse: rand(0, 2 * Math.PI)
+      }));
+    }
+
+    function drawBackground() {
+      ctx.clearRect(0, 0, W, H);
+      bgState.nodes.forEach((a, i) => {
+        a.x += a.vx; a.y += a.vy;
+        if (a.x < 0 || a.x > W) a.vx *= -1;
+        if (a.y < 0 || a.y > H) a.vy *= -1;
+
+        for (let j = i + 1; j < bgState.nodes.length; j++) {
+          const b = bgState.nodes[j];
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
+          const max = 140 * DPR;
+          if (dist < max) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(167,85,247,${(1 - dist/max)*.35})`;
+            ctx.lineWidth = 1 * DPR;
+            ctx.stroke();
+          }
+        }
+
+        const radius = a.r + Math.sin(a.pulse) * 0.6 * DPR;
+        const g = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, radius * 6);
+        g.addColorStop(0, 'rgba(124,58,237,0.95)');
+        g.addColorStop(0.25, 'rgba(168,85,247,0.65)');
+        g.addColorStop(1, 'rgba(20,0,36,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, radius * 6, 0, Math.PI * 2);
+        ctx.fill();
+        a.pulse += 0.02;
+      });
+      requestAnimationFrame(drawBackground);
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    drawBackground();
+
+    // Lógica del juego de fracciones
+    document.addEventListener('DOMContentLoaded', () => {
+      const partsBin = document.getElementById('parts-bin');
+      const target = document.getElementById('fraction-target');
+      const display = document.getElementById('fraction-display');
+      const resetButton = document.getElementById('reset-btn');
+
+      const FRACTIONS = [
+        { value: 1/2, color: 'var(--color-1-2)', label: '1/2' },
+        { value: 1/3, color: 'var(--color-1-3)', label: '1/3' },
+        { value: 1/4, color: 'var(--color-1-4)', label: '1/4' },
+        { value: 1/6, color: 'var(--color-1-6)', label: '1/6' },
+        { value: 1/8, color: 'var(--color-1-8)', label: '1/8' }
+      ];
+
+      let totalValue = 0;
+
+      function toFraction(decimal) {
+        if (decimal === 0) return '0';
+        if (decimal >= 1) return '1';
+        const tolerance = 1e-6;
+        let h1 = 1, h2 = 0, k1 = 0, k2 = 1, b = decimal;
+        do {
+          let a = Math.floor(b);
+          [h1, h2] = [a * h1 + h2, h1];
+          [k1, k2] = [a * k1 + k2, k1];
+          b = 1 / (b - a);
+        } while (Math.abs(decimal - h1 / k1) > decimal * tolerance);
+        return `${h1}/${k1}`;
+      }
+
+      function createPieSliceSVG(fraction, draggable = false) {
+        const angle = fraction.value * 360;
+        const radians = (angle - 90) * Math.PI / 180;
+        const x = 50 + 50 * Math.cos(radians), y = 50 + 50 * Math.sin(radians);
+        const largeArc = angle > 180 ? 1 : 0;
+
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('fraction-piece-wrapper');
+        if (draggable) wrapper.setAttribute('draggable', 'true');
+        wrapper.dataset.value = fraction.value;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('viewBox','0 0 100 100');
+        svg.classList.add('fraction-piece');
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('d', `M50,50 L50,0 A50,50 0 ${largeArc},1 ${x},${y} Z`);
+        path.setAttribute('fill', fraction.color);
+
+        svg.appendChild(path);
+        wrapper.appendChild(svg);
+        return wrapper;
+      }
+
+      function init() {
+        partsBin.innerHTML = '';
+        target.querySelectorAll('.placed-piece').forEach(el => el.remove());
+        totalValue = 0;
+        updateDisplay();
+
+        FRACTIONS.forEach(f => {
+          const piece = createPieSliceSVG(f, true);
+          partsBin.appendChild(piece);
+          piece.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', e.target.dataset.value);
+          });
+        });
+        target.classList.remove('completed');
+      }
+
+      function updateDisplay() {
+        display.textContent = toFraction(totalValue);
+        if (Math.abs(totalValue - 1) < 0.001) {
+          target.classList.add('completed');
+        } else {
+          target.classList.remove('completed');
+        }
+      }
+
+      target.addEventListener('dragover', e => {
+        e.preventDefault();
+        target.classList.add('drag-over');
+      });
+
+      target.addEventListener('dragleave', () => {
+        target.classList.remove('drag-over');
+      });
+
+      target.addEventListener('drop', e => {
+        e.preventDefault();
+        target.classList.remove('drag-over');
+        const value = parseFloat(e.dataTransfer.getData('text/plain'));
+        if (totalValue + value > 1.001) return;
+
+        const piece = createPieSliceSVG({ value, color: '', label: '' });
+        piece.classList.add('placed-piece');
+        piece.style.transform = `rotate(${totalValue * 360}deg)`;
+        target.appendChild(piece);
+
+        totalValue += value;
+        updateDisplay();
+      });
+
+      resetButton.addEventListener('click', init);
+      init();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Formador de Palabras</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=OpenDyslexic:wght@400;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #0a021a;
+      --bg-2: #1a0440;
+      --violet: #7c3aed;
+      --violet-2: #a78bfa;
+      --glow: 0 0 40px rgba(124,58,237,.45), 0 0 80px rgba(168,85,247,.25);
+      --stroke: rgba(255,255,255,.08);
+      --color-silaba-1: #22d3ee;
+      --color-silaba-2: #f471b5;
+      --color-silaba-3: #34d399;
+      --color-silaba-4: #fbbf24;
+      --color-silaba-5: #f87171;
+      --color-silaba-6: #a78bfa;
+      --success-color: #10b981;
+      --error-color: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(1200px 700px at 70% -10%, #3b1a66 0%, transparent 60%),
+                  radial-gradient(1000px 600px at -10% 100%, #2a0e5a 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg-2), var(--bg-1));
+      color: #e9e7ff;
+      font-family: 'OpenDyslexic', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    #net {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      filter: contrast(120%) brightness(110%);
+    }
+    
+    #regresar {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      font-size: 14px;
+      padding: 10px 16px;
+    }
+    
+    .game-container {
+      max-width: 1000px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 25px;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(28px, 5vw, 42px);
+      text-shadow: 0 0 20px rgba(168,85,247,.5);
+      margin: 0;
+      text-align: center;
+    }
+
+    .score-board {
+      display: flex;
+      gap: 20px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .score-item {
+      background: linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,.08));
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      padding: 10px 20px;
+    }
+
+    .workbench {
+      width: 100%;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--stroke);
+      border-radius: 28px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 25px;
+    }
+
+    .target-word {
+      font-size: 24px;
+      color: var(--violet-2);
+      margin-bottom: 10px;
+      text-align: center;
+      min-height: 40px;
+    }
+
+    .word-slots {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+      min-height: 100px;
+      align-items: center;
+    }
+
+    .word-slot {
+      width: 120px;
+      height: 80px;
+      border: 3px dashed rgba(255,255,255,0.3);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .word-slot.filled {
+      border-color: var(--success-color);
+      background: rgba(16, 185, 129, 0.1);
+      border-style: solid;
+    }
+
+    .word-slot.drag-over {
+      border-color: var(--violet-2);
+      background: rgba(167, 139, 250, 0.1);
+      transform: scale(1.05);
+    }
+
+    .word-slot.error {
+      border-color: var(--error-color);
+      background: rgba(239, 68, 68, 0.1);
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .silabas-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      padding: 20px;
+      max-width: 800px;
+    }
+
+    .silaba {
+      background: linear-gradient(135deg, var(--color-silaba-1), var(--color-silaba-2));
+      border: 2px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      padding: 15px 20px;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: grab;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,.3);
+      user-select: none;
+      min-width: 70px;
+      text-align: center;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    }
+
+    .silaba:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(0,0,0,.4);
+    }
+
+    .silaba:active {
+      cursor: grabbing;
+      transform: scale(1.02);
+    }
+
+    .silaba.used {
+      opacity: 0.5;
+      pointer-events: none;
+      transform: scale(0.9);
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(180deg, #8b5cf6, #6d28d9);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--glow);
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-success {
+      background: linear-gradient(180deg, #10b981, #059669);
+    }
+
+    .btn-warning {
+      background: linear-gradient(180deg, #f59e0b, #d97706);
+    }
+
+    .word-complete {
+      animation: wordComplete 1s ease-out;
+    }
+
+    @keyframes wordComplete {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .celebration {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      color: var(--success-color);
+      font-weight: 700;
+      z-index: 1000;
+      animation: celebrate 2s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes celebrate {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @media (max-width: 768px) {
+      .word-slots {
+        gap: 10px;
+      }
+      
+      .word-slot {
+        width: 100px;
+        height: 70px;
+        font-size: 20px;
+      }
+      
+      .silaba {
+        font-size: 18px;
+        padding: 12px 16px;
+      }
+      
+      .silabas-container {
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="net" aria-hidden="true"></canvas>
+  
+  <a id="regresar" class="btn" href="paginaprincipal.html" onclick="history.back()">← Regresar</a>
+  
+  <div class="game-container">
+    <h1>Formador de Palabras</h1>
+    
+    <div class="score-board">
+      <div class="score-item">
+        <span>Palabras: </span>
+        <span id="words-completed">0</span>
+      </div>
+      <div class="score-item">
+        <span>Nivel: </span>
+        <span id="current-level">1</span>
+      </div>
+    </div>
+    
+    <div class="workbench">
+      <div class="target-word">
+        <div id="word-image">🏠</div>
+        <div id="target-hint">Forma la palabra: CASA</div>
+      </div>
+      
+      <div id="word-slots" class="word-slots"></div>
+      
+      <div class="controls">
+        <button id="check-btn" class="btn btn-success">✓ Verificar</button>
+        <button id="clear-btn" class="btn btn-warning"> Limpiar</button>
+        <button id="next-btn" class="btn" style="display: none;"> Siguiente</button>
+      </div>
+    </div>
+    
+    <div id="silabas-container" class="silabas-container"></div>
+  </div>
+
+  <script>
+    // Fondo animado
+    const c = document.getElementById('net'), ctx = c.getContext('2d');
+    let W, H, DPR;
+    const bgState = { nodes: [] };
+
+    function resizeCanvas() {
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = c.width = innerWidth * DPR;
+      H = c.height = innerHeight * DPR;
+      c.style.width = innerWidth + 'px';
+      c.style.height = innerHeight + 'px';
+      spawnNodes();
+    }
+
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    function spawnNodes() {
+      const density = Math.min(80, Math.floor((innerWidth * innerHeight) / 16000));
+      bgState.nodes = Array.from({ length: density }, () => ({
+        x: rand(0, W), y: rand(0, H),
+        vx: rand(-0.2, 0.2), vy: rand(-0.2, 0.2),
+        r: rand(1, 2.5) * DPR,
+        pulse: rand(0, 2 * Math.PI)
+      }));
+    }
+
+    function drawBackground() {
+      ctx.clearRect(0, 0, W, H);
+      bgState.nodes.forEach((a, i) => {
+        a.x += a.vx; a.y += a.vy;
+        if (a.x < 0 || a.x > W) a.vx *= -1;
+        if (a.y < 0 || a.y > H) a.vy *= -1;
+
+        for (let j = i + 1; j < bgState.nodes.length; j++) {
+          const b = bgState.nodes[j];
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
+          const max = 120 * DPR;
+          if (dist < max) {
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(167,85,247,${(1 - dist/max)*.25})`;
+            ctx.lineWidth = 0.8 * DPR;
+            ctx.stroke();
+          }
+        }
+
+        const radius = a.r + Math.sin(a.pulse) * 0.5 * DPR;
+        const g = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, radius * 4);
+        g.addColorStop(0, 'rgba(124,58,237,0.8)');
+        g.addColorStop(0.3, 'rgba(168,85,247,0.4)');
+        g.addColorStop(1, 'rgba(20,0,36,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, radius * 4, 0, Math.PI * 2);
+        ctx.fill();
+        a.pulse += 0.015;
+      });
+      requestAnimationFrame(drawBackground);
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    drawBackground();
+
+    // Lógica del juego
+    class WordGame {
+      constructor() {
+        this.words = [
+          { word: 'CASA', silabas: ['CA', 'SA'], image: '🏠', hint: 'Lugar donde vivimos' },
+          { word: 'GATO', silabas: ['GA', 'TO'], image: '🐱', hint: 'Animal que maúlla' },
+          { word: 'LUNA', silabas: ['LU', 'NA'], image: '🌙', hint: 'Brilla en la noche' },
+          { word: 'MESA', silabas: ['ME', 'SA'], image: '🪑', hint: 'Mueble para comer' },
+          { word: 'PATO', silabas: ['PA', 'TO'], image: '🦆', hint: 'Ave que nada' },
+          { word: 'PELO', silabas: ['PE', 'LO'], image: '💇‍♀️', hint: 'Crece en la cabeza' },
+          { word: 'SOPA', silabas: ['SO', 'PA'], image: '🍲', hint: 'Comida líquida' },
+          { word: 'DADO', silabas: ['DA', 'DO'], image: '🎲', hint: 'Cubo para jugar' },
+          { word: 'CAMA', silabas: ['CA', 'MA'], image: '🛏️', hint: 'Para dormir' },
+          { word: 'PALA', silabas: ['PA', 'LA'], image: '🪚', hint: 'Herramienta para cavar' },
+          { word: 'MALETA', silabas: ['MA', 'LE', 'TA'], image: '🧳', hint: 'Para guardar ropa' },
+          { word: 'PELOTA', silabas: ['PE', 'LO', 'TA'], image: '⚽', hint: 'Para jugar fútbol' },
+          { word: 'CAMISA', silabas: ['CA', 'MI', 'SA'], image: '👕', hint: 'Ropa del torso' },
+          { word: 'CANELA', silabas: ['CA', 'NE', 'LA'], image: '🧂', hint: 'Especia dulce' },
+          { word: 'PALOMA', silabas: ['PA', 'LO', 'MA'], image: '🕊️', hint: 'Ave de la paz' }
+        ];
+        
+        this.colors = [
+          'var(--color-silaba-1)',
+          'var(--color-silaba-2)', 
+          'var(--color-silaba-3)',
+          'var(--color-silaba-4)',
+          'var(--color-silaba-5)',
+          'var(--color-silaba-6)'
+        ];
+        
+        this.currentWordIndex = 0;
+        this.wordsCompleted = 0;
+        this.currentLevel = 1;
+        this.placedSilabas = [];
+        
+        this.init();
+      }
+
+      init() {
+        this.setupElements();
+        this.setupEventListeners();
+        this.loadWord();
+      }
+
+      setupElements() {
+        this.wordImage = document.getElementById('word-image');
+        this.targetHint = document.getElementById('target-hint');
+        this.wordSlotsContainer = document.getElementById('word-slots');
+        this.silabasContainer = document.getElementById('silabas-container');
+        this.checkBtn = document.getElementById('check-btn');
+        this.clearBtn = document.getElementById('clear-btn');
+        this.nextBtn = document.getElementById('next-btn');
+        this.wordsCompletedEl = document.getElementById('words-completed');
+        this.currentLevelEl = document.getElementById('current-level');
+      }
+
+      setupEventListeners() {
+        this.checkBtn.addEventListener('click', () => this.checkWord());
+        this.clearBtn.addEventListener('click', () => this.clearWord());
+        this.nextBtn.addEventListener('click', () => this.nextWord());
+      }
+
+      loadWord() {
+        const currentWord = this.words[this.currentWordIndex];
+        this.wordImage.textContent = currentWord.image;
+        this.targetHint.textContent = `Forma la palabra: ${currentWord.word} - ${currentWord.hint}`;
+        
+        this.createWordSlots(currentWord);
+        this.createSilabas(currentWord);
+        
+        this.placedSilabas = [];
+        this.nextBtn.style.display = 'none';
+      }
+
+      createWordSlots(word) {
+        this.wordSlotsContainer.innerHTML = '';
+        word.silabas.forEach((_, index) => {
+          const slot = document.createElement('div');
+          slot.className = 'word-slot';
+          slot.dataset.position = index;
+          
+          // Eventos de drag and drop
+          slot.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            slot.classList.add('drag-over');
+          });
+          
+          slot.addEventListener('dragleave', () => {
+            slot.classList.remove('drag-over');
+          });
+          
+          slot.addEventListener('drop', (e) => {
+            e.preventDefault();
+            slot.classList.remove('drag-over');
+            const silabaText = e.dataTransfer.getData('text/plain');
+            const silabaElement = document.querySelector(`[data-silaba="${silabaText}"]`);
+            
+            if (silabaElement && !slot.classList.contains('filled')) {
+              this.placeSilaba(slot, silabaText, silabaElement);
+            }
+          });
+          
+          // Click para quitar sílaba
+          slot.addEventListener('click', () => {
+            if (slot.classList.contains('filled')) {
+              this.removeSilaba(slot);
+            }
+          });
+          
+          this.wordSlotsContainer.appendChild(slot);
+        });
+      }
+
+      createSilabas(word) {
+        // Crear array con sílabas correctas y algunas distractoras
+        const allSilabas = [...word.silabas];
+        
+        // Agregar sílabas distractoras basadas en el nivel
+        const distractors = this.getDistractorSilabas(word.silabas);
+        allSilabas.push(...distractors.slice(0, Math.min(4, 2 + this.currentLevel)));
+        
+        // Mezclar sílabas
+        this.shuffleArray(allSilabas);
+        
+        this.silabasContainer.innerHTML = '';
+        allSilabas.forEach((silaba, index) => {
+          const silabaEl = document.createElement('div');
+          silabaEl.className = 'silaba';
+          silabaEl.textContent = silaba;
+          silabaEl.dataset.silaba = silaba;
+          silabaEl.style.background = `linear-gradient(135deg, ${this.colors[index % this.colors.length]}, ${this.colors[(index + 1) % this.colors.length]})`;
+          silabaEl.draggable = true;
+          
+          silabaEl.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', silaba);
+          });
+          
+          this.silabasContainer.appendChild(silabaEl);
+        });
+      }
+
+      getDistractorSilabas(correctSilabas) {
+        const commonSilabas = ['MA', 'TA', 'LA', 'SA', 'PA', 'CA', 'LU', 'ME', 'PE', 'SO', 'DA', 'TO', 'NA', 'GA', 'LO', 'MI', 'NE', 'LE'];
+        return commonSilabas.filter(s => !correctSilabas.includes(s));
+      }
+
+      shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+
+      placeSilaba(slot, silabaText, silabaElement) {
+        slot.textContent = silabaText;
+        slot.classList.add('filled');
+        silabaElement.classList.add('used');
+        
+        this.placedSilabas[parseInt(slot.dataset.position)] = silabaText;
+      }
+
+      removeSilaba(slot) {
+        const silabaText = slot.textContent;
+        slot.textContent = '';
+        slot.classList.remove('filled', 'error');
+        
+        const silabaElement = document.querySelector(`[data-silaba="${silabaText}"]`);
+        if (silabaElement) {
+          silabaElement.classList.remove('used');
+        }
+        
+        this.placedSilabas[parseInt(slot.dataset.position)] = null;
+      }
+
+      checkWord() {
+        const currentWord = this.words[this.currentWordIndex];
+        const slots = this.wordSlotsContainer.querySelectorAll('.word-slot');
+        
+        let isCorrect = true;
+        slots.forEach((slot, index) => {
+          slot.classList.remove('error');
+          if (!slot.classList.contains('filled') || 
+              slot.textContent !== currentWord.silabas[index]) {
+            slot.classList.add('error');
+            isCorrect = false;
+          }
+        });
+
+        if (isCorrect) {
+          this.wordComplete();
+        } else {
+          // Shake animation para slots incorrectos
+          setTimeout(() => {
+            slots.forEach(slot => slot.classList.remove('error'));
+          }, 1000);
+        }
+      }
+
+      wordComplete() {
+        this.wordsCompleted++;
+        this.wordsCompletedEl.textContent = this.wordsCompleted;
+        
+        // Animación de celebración
+        this.wordSlotsContainer.classList.add('word-complete');
+        this.showCelebration();
+        
+        // Calcular nivel
+        this.currentLevel = Math.floor(this.wordsCompleted / 3) + 1;
+        this.currentLevelEl.textContent = this.currentLevel;
+        
+        this.nextBtn.style.display = 'inline-flex';
+        
+        setTimeout(() => {
+          this.wordSlotsContainer.classList.remove('word-complete');
+        }, 1000);
+      }
+
+      showCelebration() {
+        const celebration = document.createElement('div');
+        celebration.className = 'celebration';
+        celebration.textContent = '¡Excelente! 🎉';
+        document.body.appendChild(celebration);
+        
+        setTimeout(() => {
+          document.body.removeChild(celebration);
+        }, 2000);
+      }
+
+      clearWord() {
+        const slots = this.wordSlotsContainer.querySelectorAll('.word-slot');
+        slots.forEach(slot => {
+          if (slot.classList.contains('filled')) {
+            this.removeSilaba(slot);
+          }
+        });
+      }
+
+      nextWord() {
+        this.currentWordIndex = (this.currentWordIndex + 1) % this.words.length;
+        this.loadWord();
+      }
+    }
+
+    // Inicializar el juego cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', () => {
+      new WordGame();
+    });
+  </script>
+</body>
+</html>

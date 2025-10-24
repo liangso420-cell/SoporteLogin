@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Lista de Tareas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+    :root{
+      --bg-1:#0a021a;
+      --bg-2:#1a0440;
+      --violet:#7c3aed;
+      --violet-2:#a78bfa;
+      --glow: 0 0 40px rgba(124,58,237,.45), 0 0 80px rgba(168,85,247,.25);
+      --card: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+        color:#e9e7ff;
+        background: radial-gradient(1200px 700px at 70% -10%, #3b1a66 0%, transparent 60%),
+        radial-gradient(1000px 600px at -10% 100%, #2a0e5a 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg-2), var(--bg-1));
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    #net{
+        position:fixed; inset:0; z-index:-1; filter: contrast(120%) brightness(110%);
+    }
+
+    /* MENÚ FLOTANTE */
+    .floating-menu {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+    }
+
+    .menu-toggle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        border: 2px solid rgba(255,255,255,0.2);
+        box-shadow: var(--glow);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.3s, background 0.3s;
+    }
+
+    .menu-toggle:hover {
+        transform: scale(1.1);
+        background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+    }
+
+    .hamburger {
+        width: 24px;
+        height: 2px;
+        background: white;
+        position: relative;
+        transition: all 0.3s;
+    }
+
+    .hamburger::before,
+    .hamburger::after {
+        content: '';
+        position: absolute;
+        width: 24px;
+        height: 2px;
+        background: white;
+        transition: all 0.3s;
+    }
+
+    .hamburger::before {
+        top: -8px;
+    }
+
+    .hamburger::after {
+        top: 8px;
+    }
+
+    #menuCheck {
+        display: none;
+    }
+
+    #menuCheck:checked ~ .menu-toggle .hamburger {
+        background: transparent;
+    }
+
+    #menuCheck:checked ~ .menu-toggle .hamburger::before {
+        top: 0;
+        transform: rotate(45deg);
+    }
+
+    #menuCheck:checked ~ .menu-toggle .hamburger::after {
+        top: 0;
+        transform: rotate(-45deg);
+    }
+
+    .menu-items {
+        position: absolute;
+        top: 80px;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-20px);
+        transition: all 0.4s;
+    }
+
+    #menuCheck:checked ~ .menu-items {
+        opacity: 1;
+        pointer-events: all;
+        transform: translateY(0);
+    }
+
+    .menu-item {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .menu-item:hover {
+        transform: scale(1.15);
+        box-shadow: 0 8px 30px rgba(124,58,237,0.5);
+    }
+
+    .menu-item .tooltip {
+        position: absolute;
+        left: 75px;
+        background: rgba(0,0,0,0.9);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    }
+
+    .menu-item:hover .tooltip {
+        opacity: 1;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 2em;
+        background: rgba(26, 4, 64, 0.5);
+        border-radius: 15px;
+        border: 1px solid var(--stroke);
+        backdrop-filter: blur(10px);
+    }
+
+    .container h1 {
+        text-align: center;
+        color: white;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+    }
+
+    .add-category {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+    input[type="text"], input[type="date"] {
+        padding: 12px;
+        flex: 1;
+        background-color: rgba(255,255,255,0.1);
+        border: 1px solid var(--stroke);
+        color: white;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    input[type="text"]::placeholder {
+        color: rgba(255,255,255,0.5);
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+
+    button {
+        padding: 12px 20px;
+        background-color: var(--violet);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    button:hover {
+        background-color: #6d28d9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(124,58,237,0.4);
+    }
+
+    .category {
+        border: 1px solid var(--stroke);
+        margin-bottom: 25px;
+        padding: 1.5em;
+        border-radius: 12px;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .category h2 {
+        margin: 0 0 15px 0;
+        color: var(--violet-2);
+        font-size: 1.5em;
+    }
+
+    .add-task {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .tasks {
+        margin-top: 1em;
+    }
+
+    .task {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 8px;
+        border: 1px solid var(--stroke);
+        transition: all 0.3s;
+    }
+
+    .task:hover {
+        background: rgba(255,255,255,0.08);
+    }
+
+    .task.done {
+        text-decoration: line-through;
+        opacity: 0.5;
+    }
+
+    .task button {
+        padding: 6px 12px;
+        font-size: 16px;
+        min-width: 40px;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            margin: 20px;
+            padding: 1.5em;
+        }
+        
+        .add-category, .add-task {
+            flex-direction: column;
+        }
+    }
+</style>
+</head>
+<body>
+<canvas id="net" aria-hidden="true"></canvas>
+
+<!-- MENÚ FLOTANTE -->
+<div class="floating-menu">
+    <input type="checkbox" id="menuCheck">
+    <label for="menuCheck" class="menu-toggle">
+        <div class="hamburger"></div>
+    </label>
+    <div class="menu-items">
+        <a href="mathgames.html" class="menu-item" style="color: #10b981;">
+            π
+            <span class="tooltip">Laboratorio de Fracciones</span>
+        </a>
+        <a href="cronometro.html" class="menu-item" style="color: #f59e0b;">
+            ⏱
+            <span class="tooltip">Cronómetro Digital</span>
+        </a>
+        <a href="juegodislexia.html" class="menu-item" style="color: #8b5cf6;">
+            📝
+            <span class="tooltip">Juego de Palabras</span>
+        </a>
+        <a href="info.html" class="menu-item" style="color: #6b7280;">
+            🔍
+            <span class="tooltip">Página-Informativa</span>
+        </a>
+    </div>
+</div>
+
+<div class="container">
+    <h1> Mi Lista de Tareas</h1>
+    <div class="add-category">
+        <input type="text" id="category-name" placeholder="Nombre de la categoría (ej: Escuela, Personal, Trabajo)">
+        <button onclick="addCategory()">Agregar Categoría</button>
+    </div>
+    <div id="categories-container"></div>
+</div>
+
+<script>
+const c = document.getElementById('net');
+const ctx = c.getContext('2d');
+let W, H, DPR;
+
+const state = {
+    nodes: [],
+    mouse: {x: null, y: null, active: false}
+};
+
+function resize(){
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = c.width = Math.floor(innerWidth * DPR);
+    H = c.height = Math.floor(innerHeight * DPR);
+    c.style.width = innerWidth + 'px';
+    c.style.height = innerHeight + 'px';
+    spawn();
+}
+window.addEventListener('resize', resize);
+
+function rand(a,b){return a + Math.random()*(b-a)}
+
+function spawn(){
+    const density = Math.min(120, Math.floor((innerWidth * innerHeight) / 14000));
+    state.nodes = [...Array(density)].map(()=>({
+        x: rand(0,W), y: rand(0,H),
+        vx: rand(-0.25,0.25), vy: rand(-0.25,0.25),
+        r: rand(1.2,2.8) * DPR,
+        pulse: rand(0, 2*Math.PI)
+    }));
+}
+
+c.addEventListener('mousemove', e=>{
+    const rect = c.getBoundingClientRect();
+    state.mouse.x = (e.clientX - rect.left) * DPR;
+    state.mouse.y = (e.clientY - rect.top) * DPR;
+    state.mouse.active = true;
+});
+c.addEventListener('mouseleave', ()=> state.mouse.active = false);
+c.addEventListener('touchstart', e=>{
+    state.mouse.active = true;
+    const t = e.touches[0];
+    const rect = c.getBoundingClientRect();
+    state.mouse.x = (t.clientX - rect.left) * DPR;
+    state.mouse.y = (t.clientY - rect.top) * DPR;
+}, {passive:true});
+c.addEventListener('touchmove', e=>{
+    const t = e.touches[0];
+    const rect = c.getBoundingClientRect();
+    state.mouse.x = (t.clientX - rect.left) * DPR;
+    state.mouse.y = (t.clientY - rect.top) * DPR;
+}, {passive:true});
+c.addEventListener('touchend', ()=> state.mouse.active = false);
+
+function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    for(let i=0;i<state.nodes.length;i++){
+        const a = state.nodes[i];
+        a.x += a.vx; a.y += a.vy;
+        if(a.x<0||a.x>W) a.vx*=-1; if(a.y<0||a.y>H) a.vy*=-1;
+
+        if(state.mouse.active){
+            const dx = a.x - state.mouse.x, dy = a.y - state.mouse.y;
+            const d2 = dx*dx + dy*dy;
+            const rInfluence = 200 * DPR;
+            if(d2 < rInfluence*rInfluence){
+                const f = -0.6 / Math.max(8, Math.sqrt(d2));
+                a.vx += f*dx; a.vy += f*dy;
+            }
+        }
+
+        for(let j=i+1;j<state.nodes.length;j++){
+            const b = state.nodes[j];
+            const dx = a.x-b.x, dy=a.y-b.y;
+            const dist = Math.hypot(dx,dy);
+            const max = 140 * DPR;
+            if(dist < max){
+                const alpha = (1 - dist/max) * .35;
+                ctx.beginPath();
+                ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+                ctx.strokeStyle = `rgba(167, 85, 247, ${alpha})`;
+                ctx.lineWidth = 1 * DPR;
+                ctx.stroke();
+            }
+        }
+    }
+
+    for(const n of state.nodes){
+        n.pulse += 0.02;
+        const radius = n.r + Math.sin(n.pulse)*0.6*DPR;
+        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, radius*6);
+        g.addColorStop(0, 'rgba(124,58,237,0.95)');
+        g.addColorStop(0.25, 'rgba(168,85,247,0.65)');
+        g.addColorStop(1, 'rgba(20,0,36,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, radius*6, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    requestAnimationFrame(draw);
+}
+
+resize();
+draw();
+
+// Generador de IDs únicos
+let taskIdCounter = 0;
+
+function addCategory() {
+    const categoryInput = document.getElementById('category-name');
+    const categoryName = categoryInput.value.trim();
+    if (categoryName === '') {
+        alert('Por favor ingresa un nombre para la categoría');
+        return;
+    }
+
+    const container = document.getElementById('categories-container');
+    const categoryId = 'category-' + Date.now();
+
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'category';
+    categoryDiv.id = categoryId;
+    categoryDiv.innerHTML = `
+        <h2>${categoryName}</h2>
+        <div class="add-task">
+            <input type="text" placeholder="Nombre de la tarea" class="task-name">
+            <input type="date" class="task-date">
+            <button onclick="addTask('${categoryId}')">Agregar Tarea</button>
+        </div>
+        <div class="tasks"></div>
+    `;
+
+    container.appendChild(categoryDiv);
+    categoryInput.value = '';
+}
+
+function addTask(categoryId) {
+    const categoryDiv = document.getElementById(categoryId);
+    const taskNameInput = categoryDiv.querySelector('.task-name');
+    const taskDateInput = categoryDiv.querySelector('.task-date');
+    const tasksDiv = categoryDiv.querySelector('.tasks');
+
+    const name = taskNameInput.value.trim();
+    const date = taskDateInput.value;
+
+    if (name === '') {
+        alert('Por favor ingresa un nombre para la tarea');
+        return;
+    }
+    
+    if (date === '') {
+        alert('Por favor selecciona una fecha');
+        return;
+    }
+
+    const taskId = 'task-' + (taskIdCounter++);
+    const taskDiv = document.createElement('div');
+    taskDiv.className = 'task';
+    taskDiv.id = taskId;
+    taskDiv.innerHTML = `
+        <span>${name} (Vence: ${date})</span>
+        <button onclick="toggleDone('${taskId}')">✔</button>
+    `;
+
+    tasksDiv.appendChild(taskDiv);
+
+    taskNameInput.value = '';
+    taskDateInput.value = '';
+}
+
+function toggleDone(taskId) {
+    const task = document.getElementById(taskId);
+    task.classList.toggle('done');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+          <style>
+    :root{
+      --bg-1:#0a021a;      /* fondo profundo */
+      --bg-2:#1a0440;      /* degradado medio */
+      --violet:#7c3aed;    /* botón/acentos */
+      --violet-2:#a78bfa;  /* texto acento */
+      --glow: 0 0 40px rgba(124,58,237,.45), 0 0 80px rgba(168,85,247,.25);
+      --card: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:#e9e7ff;
+      background: radial-gradient(1200px 700px at 70% -10%, #3b1a66 0%, transparent 60%),
+                  radial-gradient(1000px 600px at -10% 100%, #2a0e5a 0%, transparent 60%),
+                  linear-gradient(180deg, var(--bg-2), var(--bg-1));
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{position:relative;min-height:100%;}
+    /* Canvas de red neuronal */
+    #net{
+      position:fixed; inset:0; z-index:-1; filter: contrast(120%) brightness(110%);
+    }
+
+    /* Barra */
+    .nav{max-width:1200px;margin:auto;padding:22px 20px;display:flex;align-items:center;gap:18px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.6px}
+    .brand-icon{width:28px;height:28px;border-radius:8px;background:conic-gradient(from 180deg, #8b5cf6, #22d3ee, #8b5cf6); box-shadow: inset 0 0 20px rgba(255,255,255,.35), var(--glow)}
+    .brand span{font-family:"Space Grotesk", Inter, sans-serif; font-size:20px}
+    .nav-space{flex:1}
+    .nav a{opacity:.85}
+    .nav a:hover{opacity:1}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:14px;background:linear-gradient(180deg,#8b5cf6,#6d28d9); border:1px solid rgba(255,255,255,.18); box-shadow: var(--glow); font-weight:700}
+
+    /* Hero */
+    .hero{max-width:900px;margin:8vh auto 0;padding:0 20px;display:flex;justify-content:center;align-items:center}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border:1px solid var(--stroke);
+      border-radius:28px;
+      padding:36px 34px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      width:100%;
+      max-width:800px;
+    }
+    h1{margin:0 0 14px;font-size:clamp(34px,4.6vw,64px);line-height:1.02;font-family:"Space Grotesk", Inter, sans-serif;}
+    .lead{margin:0 0 26px;max-width:46ch;color:#d6d2ff;font-weight:300;font-size:clamp(15px,1.4vw,18px);white-space:pre-line;line-height:1.8}
+    .cta{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+    .btn-ghost{padding:10px 16px;border-radius:14px;border:1px solid var(--stroke);background:var(--card)}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;border:1px solid var(--stroke);background:rgba(124,58,237,.12); color:var(--violet-2); font-weight:600; margin-bottom:10px}
+
+    /* Showcase panel */
+    .panel{
+      min-height:400; border-radius:28px; position:relative; overflow:hidden; border:1px solid var(--stroke);
+      background: radial-gradient(500px 280px at 30% 40%, rgba(124,58,237,.25), transparent 60%),
+                  radial-gradient(380px 240px at 80% 70%, rgba(168,85,247,.18), transparent 60%),
+                  rgba(255,255,255,.03);
+    }
+    .panel::after{content:"";position:absolute;inset:0;box-shadow: inset 0 0 120px rgba(124,58,237,.18)}
+    .panel .badge{position:absolute;top:16px;right:16px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.08);backdrop-filter: blur(10px); font-weight:700}
+
+    /* Footer note */
+    .foot{max-width:1200px;margin:40px auto 60px;padding:0 20px;opacity:.7; font-size:14px}
+
+    /* Responsive */
+    @media (max-width:900px){
+      .hero{padding:0 20px}
+      .card{max-width:100%}
+    }
+  </style>
+  </head>
+<body>
+<canvas id="net" aria-hidden="true"></canvas>
+<canvas id="net"></canvas>
+ <a id="regresar" class="btn" href="paginaprincipal.html">← Regresar</a>
+    <main class="hero">
+      <section class="card" aria-labelledby="titulo">
+        <h1 id="titulo">¿Qué es la <span style="color:var(--violet-2);text-shadow:0 0 18px rgba(124,58,237,.45)">neurodivergencia?</span></h1>
+        <p class="lead">La neurodivergencia se refiere a las diferencias en el funcionamiento del cerebro que se apartan del estándar "neurotípico". Esto no es una enfermedad ni algo que deba "curarse", sino una forma diferente de procesar la información, sentir o pensar.</p>
+        <div class="cta">
+        </div>
+      </section>
+    </main>
+    <main class="hero">
+      <section class="card" aria-labelledby="titulo">
+        <span class="pill">TEA-Trastorno del Espectro Autista</span>
+        <h1 id="titulo">¿Qué es?</h1>
+        <p class="lead">Una condición del neurodesarrollo que afecta la comunicación, la interacción social y el comportamiento.</p>
+        
+        <p class="lead"><strong>🔍 Señales comunes:</strong>
+- Dificultad para entender normas sociales o expresiones no verbales.
+- Hipersensibilidad a sonidos, luces, texturas.
+- Rutinas repetitivas o intereses intensos en ciertos temas.
+- Comunicación verbal o no verbal diferente.</p>
+
+        <p class="lead"><strong>🫂 Cómo apoyar:</strong>
+- Sé claro y directo al hablar, evita dobles sentidos.
+- Respeta sus rutinas y preferencias sensoriales.
+- No lo fuerces a socializar si no quiere.
+- Brinda ambientes tranquilos y estructurados.</p>
+
+        <p class="lead"><strong>🧠 Tips para personas con autismo:</strong>
+- Usa agendas visuales o listas para organizar tu día.
+- Si te abruma un lugar, busca un espacio seguro donde descansar.
+- Informa a tu entorno sobre lo que necesitas (por ejemplo: menos ruido).
+- Desarrolla tus intereses: ¡pueden ser talentos!</p>
+        <div class="cta">
+        </div>
+      </section>
+    </main>
+    <main class="hero">
+      <section class="card" aria-labelledby="titulo">
+        <span class="pill">TDAH-Trastorno por Déficit de Atención con/sin Hiperactividad</span>
+        <h1 id="titulo">¿Qué es? </h1>
+        <p class="lead">Una condición que afecta la atención, el control de impulsos y la organización. Puede presentarse con hiperactividad o sin ella.</p>
+
+        <p class="lead"><strong>🔍 Señales comunes:</strong>
+- Dificultad para mantener la atención.
+- Impulsividad o dificultad para esperar turnos.
+- Problemas de organización y manejo del tiempo.
+- Necesidad constante de moverse o hablar.</p>
+
+        <p class="lead"><strong>🫂 Cómo apoyar:</strong>
+- Ofrece instrucciones claras, paso a paso.
+- Usa recordatorios visuales o alarmas.
+- Evita criticar por distracciones, ofrece apoyo.
+- Proporciona descansos frecuentes en tareas largas.</p>
+
+        <p class="lead"><strong>🧠 Tips para personas con TDAH:</strong>
+- Usa cronómetros o temporizadores para mantenerte enfocado.
+- Divide las tareas grandes en pasos pequeños.
+- Ten una rutina diaria visual o escrita.
+- Usa herramientas como apps de planificación o notas adhesivas.</p>
+        <div class="cta">
+        </div>
+      </section>
+    </main>
+    <main class="hero">
+      <section class="card" aria-labelledby="titulo">
+        <span class="pill">DISLEXIA</span>
+        <h1 id="titulo">¿Qué es?</h1>
+        <p class="lead">Una dificultad específica de aprendizaje que afecta la lectura, escritura y ortografía, sin afectar la inteligencia.</p>
+
+        <p class="lead"><strong>🔍 Señales comunes:</strong>
+- Confundir letras similares (b/d, p/q).
+- Leer lentamente o con esfuerzo.
+- Dificultad para escribir lo que se escucha.
+- Problemas con la ortografía.</p>
+
+        <p class="lead"><strong>🫂 Cómo apoyar:</strong>
+- No corrijas con dureza, ten paciencia.
+- Usa textos con letra clara y tamaño grande.
+- Da más tiempo para leer o escribir.
+- Proporciónale recursos visuales o auditivos.</p>
+
+        <p class="lead"><strong>🧠 Tips para personas con dislexia:</strong>
+- Usa audiolibros o apps lectoras.
+- Practica con material adaptado (textos con tipografía para dislexia).
+- Lee en voz alta y a tu ritmo.
+- Usa correctores ortográficos y herramientas digitales.</p>
+        <div class="cta">
+        </div>
+      </section>
+    </main>
+    <main class="hero">
+      <section class="card" aria-labelledby="titulo">
+        <span class="pill">DISLALIA</span>
+        <h1 id="titulo">¿Qué es?</h1>
+        <p class="lead">Una dificultad en la pronunciación de ciertos sonidos o letras, común en niños en edad temprana.</p>
+
+        <p class="lead"><strong>🔍 Señales comunes:</strong>
+- Sustituir sonidos ("tasa" por "casa").
+- Omitir sonidos ("apo" en vez de "sapo").
+- Dificultad para pronunciar "r", "s", "l", etc.
+- Frustración al hablar por no ser entendido.</p>
+
+        <p class="lead"><strong>🫂 Cómo apoyar:</strong>
+- No te burles ni imites su forma de hablar.
+- Refuerza con amor: repite la palabra correctamente sin presión.
+- Motiva a que hable y exprese lo que piensa.
+- Busca apoyo de un fonoaudiólogo si persiste tras los 5 años.</p>
+
+        <p class="lead"><strong>🧠 Tips para personas con dislalia:</strong>
+- Practica frente a un espejo.
+- Lee en voz alta con ayuda de un adulto.
+- Juega con trabalenguas sencillos.
+- Escucha canciones infantiles para reforzar sonidos.</p>
+        <div class="cta">
+        </div>
+      </section>
+    </main>
+    <main class="hero">
+      <section class="card" aria-labelledby="titulo">
+        <h1 id="titulo">CONSEJO GENERAL PARA TODOS:</h1>
+        <p class="lead">✔️La neurodivergencia no es un problema que arreglar, sino una forma distinta de ser.
+✔️ Con comprensión, herramientas adecuadas y aceptación, todos pueden aprender, crecer y aportar.
+✔️ Fomentar la empatía, la paciencia y la diversidad es clave para una sociedad más inclusiva.</p>
+        <div class="cta">
+        </div>
+      </section>
+    </main>
+
+
+  <script>
+    // --- Fondo interactivo tipo red neuronal ---
+    const c = document.getElementById('net');
+    const ctx = c.getContext('2d');
+    let W, H, DPR;
+
+    const state = {
+      nodes: [],
+      mouse: {x: null, y: null, active: false}
+    };
+
+    function resize(){
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = c.width = Math.floor(innerWidth * DPR);
+      H = c.height = Math.floor(innerHeight * DPR);
+      c.style.width = innerWidth + 'px';
+      c.style.height = innerHeight + 'px';
+      spawn();
+    }
+    window.addEventListener('resize', resize);
+
+    function rand(a,b){return a + Math.random()*(b-a)}
+
+    function spawn(){
+      const density = Math.min(120, Math.floor((innerWidth * innerHeight) / 14000));
+      state.nodes = [...Array(density)].map(()=>({
+        x: rand(0,W), y: rand(0,H),
+        vx: rand(-0.25,0.25), vy: rand(-0.25,0.25),
+        r: rand(1.2,2.8) * DPR,
+        pulse: rand(0, 2*Math.PI)
+      }));
+    }
+
+    // Interacción
+    c.addEventListener('mousemove', e=>{
+      const rect = c.getBoundingClientRect();
+      state.mouse.x = (e.clientX - rect.left) * DPR;
+      state.mouse.y = (e.clientY - rect.top) * DPR;
+      state.mouse.active = true;
+    });
+    c.addEventListener('mouseleave', ()=> state.mouse.active = false);
+    c.addEventListener('touchstart', e=>{
+      state.mouse.active = true;
+      const t = e.touches[0];
+      const rect = c.getBoundingClientRect();
+      state.mouse.x = (t.clientX - rect.left) * DPR;
+      state.mouse.y = (t.clientY - rect.top) * DPR;
+    }, {passive:true});
+    c.addEventListener('touchmove', e=>{
+      const t = e.touches[0];
+      const rect = c.getBoundingClientRect();
+      state.mouse.x = (t.clientX - rect.left) * DPR;
+      state.mouse.y = (t.clientY - rect.top) * DPR;
+    }, {passive:true});
+    c.addEventListener('touchend', ()=> state.mouse.active = false);
+
+    function draw(){
+      // fondo suave
+      ctx.clearRect(0,0,W,H);
+
+      // líneas
+      for(let i=0;i<state.nodes.length;i++){
+        const a = state.nodes[i];
+        a.x += a.vx; a.y += a.vy;
+        if(a.x<0||a.x>W) a.vx*=-1; if(a.y<0||a.y>H) a.vy*=-1;
+
+        // atracción/repulsión suave al mouse
+        if(state.mouse.active){
+          const dx = a.x - state.mouse.x, dy = a.y - state.mouse.y;
+          const d2 = dx*dx + dy*dy;
+          const rInfluence = 200 * DPR;
+          if(d2 < rInfluence*rInfluence){
+            const f = -0.6 / Math.max(8, Math.sqrt(d2));
+            a.vx += f*dx; a.vy += f*dy;
+          }
+        }
+
+        for(let j=i+1;j<state.nodes.length;j++){
+          const b = state.nodes[j];
+          const dx = a.x-b.x, dy=a.y-b.y;
+          const dist = Math.hypot(dx,dy);
+          const max = 140 * DPR;
+          if(dist < max){
+            const alpha = (1 - dist/max) * .35;
+            ctx.beginPath();
+            ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
+            ctx.strokeStyle = `rgba(167, 85, 247, ${alpha})`;
+            ctx.lineWidth = 1 * DPR;
+            ctx.stroke();
+          }
+        }
+      }
+
+      // nodos con brillo pulsatil
+      for(const n of state.nodes){
+        n.pulse += 0.02;
+        const radius = n.r + Math.sin(n.pulse)*0.6*DPR;
+        const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, radius*6);
+        g.addColorStop(0, 'rgba(124,58,237,0.95)');
+        g.addColorStop(0.25, 'rgba(168,85,247,0.65)');
+        g.addColorStop(1, 'rgba(20,0,36,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, radius*6, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    resize();
+    draw();
+  </script>
+</body>
+</html>
